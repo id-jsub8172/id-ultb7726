@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Gate</title>
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom animations for the modal */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; transform: scale(1); }
+            to { opacity: 0; transform: scale(0.95); }
+        }
+
+        .modal-enter {
+            animation: fadeIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+        .modal-exit {
+            animation: fadeOut 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+
+        /* Set font to Inter */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Custom color from user request */
+        .bg-custom-purple {
+            background-color: #704aba;
+        }
+    </style>
+</head>
+<body class="bg-[#0e0e1a] text-white flex items-center justify-center min-h-screen p-4">
+
+    <!-- Main page content with the locked link -->
+    <div class="flex flex-col items-center space-y-8 text-center p-8 bg-[#1a1a2e] rounded-xl shadow-2xl max-w-lg w-full transition-all duration-300 transform hover:scale-105 border-2 border-transparent hover:border-[#704aba]">
+        <h1 class="text-4xl sm:text-5xl font-extrabold tracking-tight text-white">
+            Access The Secret Link
+        </h1>
+        <p class="text-base sm:text-lg text-gray-300 max-w-sm">
+            You must first prove your patience by completing a simple task.
+        </p>
+        <a id="access-link" href="#" class="inline-block px-8 py-4 text-lg font-bold text-white rounded-full bg-custom-purple shadow-lg transform transition-all duration-300 hover:scale-110 hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-custom-purple focus:ring-opacity-50">
+            Open Task
+        </a>
+    </div>
+
+    <!-- The in-site pop-up modal -->
+    <div id="task-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black bg-opacity-75 p-4 transition-opacity">
+        <div id="modal-content" class="bg-[#1a1a2e] text-white p-8 rounded-xl shadow-3xl w-full max-w-xl max-h-[90vh] overflow-y-auto modal-enter">
+            <!-- Modal Header -->
+            <div class="flex justify-between items-center pb-4 border-b-2 border-custom-purple mb-6">
+                <h2 class="text-2xl sm:text-3xl font-bold">Your Task</h2>
+                <button id="close-btn" class="text-white text-3xl opacity-50 cursor-not-allowed transition-transform duration-300 hover:rotate-90">
+                    &times;
+                </button>
+            </div>
+            
+            <!-- Task Content - Google Form -->
+            <div class="w-full h-96 sm:h-[400px] border-2 border-custom-purple rounded-lg overflow-hidden mb-6">
+                <iframe src="https://forms.gle/BaqaSXTjvU2QvrTY7"
+                        class="w-full h-full"
+                        frameborder="0"
+                        marginheight="0"
+                        marginwidth="0"
+                        title="Task Form">Loading…</iframe>
+            </div>
+
+            <!-- Countdown Timer -->
+            <div class="mt-8 pt-4 border-t-2 border-custom-purple text-center">
+                <p class="text-lg sm:text-xl font-semibold mb-2">Time Remaining:</p>
+                <div id="countdown" class="text-4xl sm:text-5xl font-extrabold text-custom-purple animate-pulse">
+                    30
+                </div>
+                <p id="close-text" class="text-sm text-gray-400 mt-2">
+                    Close button will be enabled in <span id="countdown-text">30</span> seconds.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const accessLink = document.getElementById('access-link');
+            const taskModal = document.getElementById('task-modal');
+            const modalContent = document.getElementById('modal-content');
+            const closeBtn = document.getElementById('close-btn');
+            const countdownEl = document.getElementById('countdown');
+            const countdownTextEl = document.getElementById('countdown-text');
+
+            const DURATION = 30; // 30 seconds
+            let countdownInterval;
+
+            accessLink.addEventListener('click', (event) => {
+                // We only want to open the modal on the first click.
+                // The link's href is initially "#".
+                if (accessLink.href.includes('#')) {
+                    event.preventDefault(); 
+                    
+                    // Show modal with animation
+                    taskModal.classList.remove('hidden');
+                    modalContent.classList.remove('modal-exit');
+                    modalContent.classList.add('modal-enter');
+
+                    // Disable close button and start countdown
+                    closeBtn.disabled = true;
+                    closeBtn.style.cursor = 'not-allowed';
+                    closeBtn.style.opacity = '0.5';
+                    let timeRemaining = DURATION;
+                    countdownEl.textContent = timeRemaining;
+                    countdownTextEl.textContent = timeRemaining;
+                    
+                    countdownInterval = setInterval(() => {
+                        timeRemaining--;
+                        countdownEl.textContent = timeRemaining;
+                        countdownTextEl.textContent = timeRemaining;
+                        
+                        if (timeRemaining <= 0) {
+                            clearInterval(countdownInterval);
+                            
+                            // Enable the close button
+                            closeBtn.disabled = false;
+                            closeBtn.style.cursor = 'pointer';
+                            closeBtn.style.opacity = '1';
+
+                            // Update text to indicate it's ready
+                            countdownEl.textContent = 'Done!';
+                            countdownTextEl.textContent = 'You can now close this window.';
+                        }
+                    }, 1000);
+                }
+            });
+
+            closeBtn.addEventListener('click', () => {
+                if (!closeBtn.disabled) {
+                    // Hide modal with animation
+                    modalContent.classList.remove('modal-enter');
+                    modalContent.classList.add('modal-exit');
+                    
+                    setTimeout(() => {
+                        taskModal.classList.add('hidden');
+                        
+                        // Change the "Open Task" button to "Continue to Link" and set its href.
+                        accessLink.textContent = 'Continue to Link';
+                        accessLink.href = 'https://tinyurl.com/link1roblox';
+
+                        // Reset modal content for future use, although the link will now navigate away.
+                        countdownEl.textContent = DURATION;
+                        countdownTextEl.textContent = DURATION;
+
+                    }, 300); // Wait for the fade-out animation to complete
+                }
+            });
+
+            // Prevent closing the modal by clicking outside of it
+            taskModal.addEventListener('click', (event) => {
+                if (event.target === taskModal) {
+                    // Do nothing
+                }
+            });
+        });
+    </script>
+</body>
+</html>
